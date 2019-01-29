@@ -24,7 +24,7 @@ def haceCuadrada(matriz):
             cuadrada[i][j] = cuadrada[i][j] + matriz[i][j]
     return cuadrada
 #Funcion que hace la convolucion de una imagen con un kernel
-def convolucion(imagen, kernel):
+def convolucionPrimera(imagen, kernel):
     m, n = kernel.shape
     if (m != n):
         kernel = haceCuadrada(kernel)        
@@ -37,6 +37,21 @@ def convolucion(imagen, kernel):
             for j in range(x):
                 convolucionada[i][j] = np.sum(imagen[i:i+m, j:j+m]*kernel)
         convolucionada[convolucionada <= 0] = 0
+    return convolucionada
+
+def convolucion(imagen, kernel):
+    m, n = kernel.shape
+    y, x = imagen.shape
+    m = m//2
+    n = n//2
+    convolucionada = np.zeros((y,x))
+    for i in range(m, y-m):
+        for j in range(n, x-n):
+            suma = 0
+            for k in range(kernel.shape[0]):
+                for l in range(kernel.shape[1]):
+                    suma = suma + kernel[k][l] * imagen[i-m+k][j-n+l]
+            convolucionada[i][j] = suma
     return convolucionada
 
 #Muestra la imagen original
@@ -71,6 +86,7 @@ plt.show()
 #Convolucion con kernel 3x3
 k = np.array([[-1, -1, -1],[2, 2, 2],[-1, -1, -1]])
 convo = convolucion(img, k)
+#print('El tamaño de la imagen es: ', convo.shape)
 plt.figure()
 plt.imshow(convo, cmap=plt.cm.gray)
 plt.title('Convolucion con kernel de 3x3')
@@ -88,9 +104,9 @@ plt.show()
 
 #Convolucion con kernel de 5x5 una vez
 k = 1/256 * np.array([[1,4,6,4,1],[4,16,24,16,4],[6,24,36,24,6],[4,16,24,16,4],[1,4,6,4,1]])
-convo = convolucion(img, k)
+convoUna = convolucion(img, k)
 plt.figure()
-plt.imshow(convo, cmap=plt.cm.gray)
+plt.imshow(convoUna, cmap=plt.cm.gray)
 plt.title('Convolucion con kernel de 5x5 una vez')
 plt.axis('off')
 plt.show()
@@ -99,12 +115,27 @@ plt.show()
 convo = convolucion(img, k)
 convo = convolucion(convo, k)
 convo = convolucion(convo, k)
-convo = convolucion(convo, k)
+convoCuatro = convolucion(convo, k)
 plt.figure()
-plt.imshow(convo, cmap=plt.cm.gray)
+plt.imshow(convoCuatro, cmap=plt.cm.gray)
 plt.title('Convolucion con kernel de 5x5 cuatro veces consecutivas')
 plt.axis('off')
 plt.show()
 
+#Convolucion con un kernel de 3x3 y la imagen ya con kernel Gaussiano
+k = np.array([[-1, -1, -1],[2, 2, 2],[-1, -1, -1]])
+convo = convolucion(convoUna, k)
+plt.figure()
+plt.imshow(convo, cmap=plt.cm.gray)
+plt.title('Convolucion con kernel de 3x3 sobre la imagen convolucionada una vez')
+plt.axis('off')
+plt.show()
 
+#Convolucion con un kernel de 3x3 y la imagen con cuatro kernel Gaussiano
+convo = convolucion(convoCuatro, k)
+plt.figure()
+plt.imshow(convo, cmap=plt.cm.gray)
+plt.title('Convolucion con kernel de 3x3 sobre la imagen convolucionada cuatro veces')
+plt.axis('off')
+plt.show()
 
