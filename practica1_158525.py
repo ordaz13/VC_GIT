@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Jan 28 21:09:35 2019
-
-@author: super
+Carlos Octavio Ordaz Bernal
+158525
+Visión por Computadora
+29 de enero de 2019
 """
 
 import numpy as np
@@ -24,23 +25,14 @@ def haceCuadrada(matriz):
             cuadrada[i][j] = cuadrada[i][j] + matriz[i][j]
     return cuadrada
 #Funcion que hace la convolucion de una imagen con un kernel
-def convolucionPrimera(imagen, kernel):
-    m, n = kernel.shape
-    if (m != n):
-        kernel = haceCuadrada(kernel)        
-    if (m == n):
-        y, x = imagen.shape
-        y = y - m + 1
-        x = x - m + 1
-        convolucionada = np.zeros((y,x))
-        for i in range(y):
-            for j in range(x):
-                convolucionada[i][j] = np.sum(imagen[i:i+m, j:j+m]*kernel)
-        convolucionada[convolucionada <= 0] = 0
-    return convolucionada
-
 def convolucion(imagen, kernel):
     m, n = kernel.shape
+    if m != n:
+        kernel = haceCuadrada(kernel)
+    #No me funciona usar la siguiente linea, marca error en parametros ?
+    #kernel = np.flip(kernel)
+    kernel = np.flip(kernel,0)
+    kernel = np.flip(kernel,1)
     y, x = imagen.shape
     m = m//2
     n = n//2
@@ -52,7 +44,18 @@ def convolucion(imagen, kernel):
                 for l in range(kernel.shape[1]):
                     suma = suma + kernel[k][l] * imagen[i-m+k][j-n+l]
             convolucionada[i][j] = suma
+    convolucionada[convolucionada <= 0] = 0
     return convolucionada
+
+#Funcion que devuelve la cantidad de veces que se aplica el kernel de 5x5 para obtener std < 0.1
+def cuantasVeces(imagen, kernel):
+    convo = convolucion(imagen, kernel)
+    cuenta = 0
+    while np.std(convo) >= 0.1:
+        convo = convolucion(convo, kernel)
+        cuenta = cuenta + 1
+        print(np.std(convo),'\t',cuenta)
+    return cuenta
 
 #Muestra la imagen original
 img = io.imread('Lena-grayscale.jpg')
@@ -74,9 +77,10 @@ print('La intensidad minima es: ', img.min())
 print('La intensidad maxima es: ', img.max())
 
 #Mascara con valores booleanos
-mascara = img > 0.8
+valor = img.max()*0.8
+mascara = img > valor
 copiaImg = np.zeros((200,200))
-copiaImg[img > 0.8] = img[img > 0.8]
+copiaImg[img > valor] = img[img > valor]
 plt.figure()
 io.imshow(copiaImg)
 plt.axis('off')
@@ -122,6 +126,11 @@ plt.title('Convolucion con kernel de 5x5 cuatro veces consecutivas')
 plt.axis('off')
 plt.show()
 
+#Cantidad de veces que se aplica el kernel de 5x5 para obtener std < 0.1
+#res = cuantasVeces(img, k)
+#print('Se necesito aplicar ', res, ' veces la convolucion')
+#En total fueron 3282 veces
+
 #Convolucion con un kernel de 3x3 y la imagen ya con kernel Gaussiano
 k = np.array([[-1, -1, -1],[2, 2, 2],[-1, -1, -1]])
 convo = convolucion(convoUna, k)
@@ -139,3 +148,15 @@ plt.title('Convolucion con kernel de 3x3 sobre la imagen convolucionada cuatro v
 plt.axis('off')
 plt.show()
 
+#Resta de la imagen convolucionada cuatro veces con kernel 3x3 y la original
+k = k.transpose()
+convo = convolucion(img, k)
+convo = convolucion(convo, k)
+convo = convolucion(convo, k)
+convo = convolucion(convo, k)
+resta = convo - img
+plt.figure()
+plt.imshow(resta, cmap=plt.cm.gray)
+plt.title('Resta de la imagen convolucionada cuatro veces con kernel 3x3 y la original')
+plt.axis('off')
+plt.show()
